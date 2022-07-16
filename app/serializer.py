@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import UserInfo
+import bcrypt
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta :
@@ -13,10 +14,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         name = data.get('name')
         phoneNum = data.get('phoneNum')
 
+        pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        pw = pw.decode('utf-8')
+
         user = UserInfo(
             email = email,
             nickname = nickname,
-            password = password,
+            password = pw,
             name = name,
             phoneNum = phoneNum
         )

@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from .models import UserInfo
 
 # Default Python Module
-import json, re, os, jwt
+import json, re, os, jwt, bcrypt
 from datetime import datetime, timedelta
 
 SECRET_KEY = os.getenv('JWT_SECRET_KEY')
@@ -67,7 +67,6 @@ class RegisterView(APIView):
                 )
 
         except jwt.ExpiredSignatureError:
-            # Expired Token
             return Response(
                 {
                     "message" : "Token Expired"
@@ -121,14 +120,7 @@ class LoginView(APIView):
                      status=status.HTTP_400_BAD_REQUEST
                 )
             else:
-                if user.password != request["pw"]:
-                    return Response(
-                        {
-                            "message": "비밀번호가 일치하지 않습니다."
-                        },
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                else:
+                if bcrypt.checkpw(request["pw"].encode('utf-8'), user.password.encode('utf-8')):
                     token = jwt.encode(
                         {
                             'id': user.email,
@@ -144,6 +136,13 @@ class LoginView(APIView):
                         },
                         status=status.HTTP_200_OK
                     )
+                else:
+                    return Response(
+                        {
+                            "message": "비밀번호가 일치하지 않습니다."
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
         else:
             user = UserInfo.objects.get(nickname = request["id"])
             if user is None:
@@ -154,14 +153,7 @@ class LoginView(APIView):
                      status=status.HTTP_400_BAD_REQUEST
                 )
             else:
-                if user.password != request["pw"]:
-                    return Response(
-                        {
-                            "message": "비밀번호가 일치하지 않습니다."
-                        },
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                else:
+                if bcrypt.checkpw(request["pw"].encode('utf-8'), user.password.encode('utf-8')):
                     token = jwt.encode(
                         {
                             'id': user.nickname,
@@ -176,6 +168,13 @@ class LoginView(APIView):
                             "token" : token
                         },
                         status=status.HTTP_200_OK
+                    )
+                else:
+                    return Response(
+                        {
+                            "message": "비밀번호가 일치하지 않습니다."
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
                     )
 
 class InfoView(APIView):
