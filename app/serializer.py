@@ -14,8 +14,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         name = data.get('name')
         phoneNum = data.get('phoneNum')
 
-        pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        pw = pw.decode('utf-8')
+        _pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        pw = _pw.decode('utf-8')
 
         user = UserInfo(
             email = email,

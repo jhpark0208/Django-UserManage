@@ -85,11 +85,14 @@ class ResetView(APIView):
             )
 
             request = json.loads(request.body)
+            _pw = bcrypt.hashpw(request['pw'].encode('utf-8'), bcrypt.gensalt())
+            pw = _pw.decode('utf-8')
+            
             p = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
             if p.match(request["id"]) != None :
-                UserInfo.objects.filter(email = request["id"]).update(password = request["pw"])
+                UserInfo.objects.filter(email = request["id"]).update(password = pw)
             else:
-                UserInfo.objects.filter(nickname = request["id"]).update(password = request["pw"])
+                UserInfo.objects.filter(nickname = request["id"]).update(password = pw)
 
             return Response(
                 {
