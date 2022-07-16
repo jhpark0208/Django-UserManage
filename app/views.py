@@ -9,8 +9,8 @@ from .models import UserInfo
 import json, re, os, jwt, bcrypt
 from datetime import datetime, timedelta
 
-SECRET_KEY = os.getenv('JWT_SECRET_KEY')
-ALGORITHM = os.getenv('JWT_ALGORITHM')
+SECRET_KEY = os.getenv('JWT_SECRET_KEY') if os.getenv('JWT_SECRET_KEY') != None else 'jhpark'
+ALGORITHM = os.getenv('JWT_ALGORITHM') if os.getenv('JWT_ALGORITHM') != None else 'HS256'
 
 class VerifyView(APIView):
     def post(self, request):
