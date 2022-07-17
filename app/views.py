@@ -43,71 +43,87 @@ class VerifyView(APIView):
 class RegisterView(APIView):
     def post(self, request):
         Authorization = request.META.get('HTTP_AUTHORIZATION')
-        try:
-            jwt.decode(
-                Authorization,
-                SECRET_KEY,
-                algorithms = ALGORITHM
-            )
-
-            request = json.loads(request.body)
-            register_serializer = RegisterSerializer(data=request)
-            if register_serializer.is_valid():
-                register_serializer.save()
-                return Response(
-                    {
-                        "message" : "회원가입이 되었습니다!"
-                    }
-                    , status = status.HTTP_200_OK
-                )
-            else:
-                return Response(
-                    register_serializer.errors
-                    , status = status.HTTP_400_BAD_REQUEST
-                )
-
-        except jwt.ExpiredSignatureError:
+        if Authorization is None :
             return Response(
                 {
-                    "message" : "Token Expired"
+                    "message" : "Token을 설정해주세요"
                 },
                 status = status.HTTP_400_BAD_REQUEST
             )
+        else:
+            try:
+                jwt.decode(
+                    Authorization,
+                    SECRET_KEY,
+                    algorithms = ALGORITHM
+                )
+
+                request = json.loads(request.body)
+                register_serializer = RegisterSerializer(data=request)
+                if register_serializer.is_valid():
+                    register_serializer.save()
+                    return Response(
+                        {
+                            "message" : "회원가입이 되었습니다!"
+                        }
+                        , status = status.HTTP_200_OK
+                    )
+                else:
+                    return Response(
+                        register_serializer.errors
+                        , status = status.HTTP_400_BAD_REQUEST
+                    )
+
+            except jwt.ExpiredSignatureError:
+                return Response(
+                    {
+                        "message" : "Token Expired"
+                    },
+                    status = status.HTTP_400_BAD_REQUEST
+                )
 
 class ResetView(APIView):
     def post(self, request):
         Authorization = request.META.get('HTTP_AUTHORIZATION')
-        try:
-            jwt.decode(
-                Authorization,
-                SECRET_KEY,
-                algorithms = ALGORITHM
-            )
-
-            request = json.loads(request.body)
-            _pw = bcrypt.hashpw(request['pw'].encode('utf-8'), bcrypt.gensalt())
-            pw = _pw.decode('utf-8')
-            
-            p = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
-            if p.match(request["id"]) != None :
-                UserInfo.objects.filter(email = request["id"]).update(password = pw)
-            else:
-                UserInfo.objects.filter(nickname = request["id"]).update(password = pw)
-
+        if Authorization is None :
             return Response(
                 {
-                    "message" : "비밀번호가 재설정 되었습니다."
-                },
-                status = status.HTTP_200_OK
-            )
-
-        except jwt.ExpiredSignatureError:
-            return Response(
-                {
-                    "message" : "Token Expired"
+                    "message" : "Token을 설정해주세요"
                 },
                 status = status.HTTP_400_BAD_REQUEST
-            )        
+            )
+        else:
+            try:
+                jwt.decode(
+                    Authorization,
+                    SECRET_KEY,
+                    algorithms = ALGORITHM
+                )
+
+                request = json.loads(request.body)
+                _pw = bcrypt.hashpw(request['pw'].encode('utf-8'), bcrypt.gensalt())
+                pw = _pw.decode('utf-8')
+
+                p = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+                if p.match(request["id"]) != None :
+                    UserInfo.objects.filter(email = request["id"]).update(password = pw)
+                else:
+                    UserInfo.objects.filter(nickname = request["id"]).update(password = pw)
+
+                return Response(
+                    {
+                        "message" : "비밀번호가 재설정 되었습니다."
+                    },
+                    status = status.HTTP_200_OK
+                )
+
+            except jwt.ExpiredSignatureError:
+                return Response(
+                    {
+                        "message" : "Token Expired"
+                    },
+                    status = status.HTTP_400_BAD_REQUEST
+                )        
 
 class LoginView(APIView):
     def post(self, request):
@@ -183,32 +199,40 @@ class LoginView(APIView):
 class InfoView(APIView):
     def get(self, request):
         Authorization = request.META.get('HTTP_AUTHORIZATION')
-        try:
-            token = jwt.decode(
-                Authorization,
-                SECRET_KEY,
-                algorithms = ALGORITHM
-            )
-            id = token.get('id')
-            p = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
-            
-            user = None
-            if p.match(id) != None:
-                user = UserInfo.objects.get(email = id)
-            else:
-                user = UserInfo.objects.get(nickname = id)
-
-            returnUser = UserInfoSerializer(user)
-            return Response(
-                returnUser.data,
-                status = status.HTTP_200_OK
-            )
-        except jwt.ExpiredSignatureError:
+        if Authorization is None :
             return Response(
                 {
-                    "message" : "Token Expired"
+                    "message" : "Token을 설정해주세요"
                 },
                 status = status.HTTP_400_BAD_REQUEST
             )
+        else:
+            try:
+                token = jwt.decode(
+                    Authorization,
+                    SECRET_KEY,
+                    algorithms = ALGORITHM
+                )
+                id = token.get('id')
+                p = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+                
+                user = None
+                if p.match(id) != None:
+                    user = UserInfo.objects.get(email = id)
+                else:
+                    user = UserInfo.objects.get(nickname = id)
+    
+                returnUser = UserInfoSerializer(user)
+                return Response(
+                    returnUser.data,
+                    status = status.HTTP_200_OK
+                )
+            except jwt.ExpiredSignatureError:
+                return Response(
+                    {
+                        "message" : "Token Expired"
+                    },
+                    status = status.HTTP_400_BAD_REQUEST
+                )
 
         
